@@ -2,6 +2,7 @@ import logging
 import shutil
 from contextlib import redirect_stdout
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from io import StringIO
 from textwrap import dedent
 
@@ -11,12 +12,15 @@ from rich.layout import Layout
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
+from rich.status import Status
 from rich.syntax import Syntax
 from rich.text import Text
 
 SPIEL = "[Spiel](https://github.com/JoshKarpel/spiel)"
 GITHUB = "[GitHub](https://github.com/e-staats/rich-lightning-talk)"
 console = Console()
+_width, _height = shutil.get_terminal_size()
+console.size = (_width - 1, _height - 1)
 
 
 def pad_markdown(markup: str) -> RenderableType:
@@ -54,8 +58,6 @@ def get_code_output(function, *args):
 class Slide:
     def __init__(self):
         self.console = console
-        _width, _height = shutil.get_terminal_size()
-        self.console.size = (_width - 1, _height - 1)
 
     def prepare(self):
         self.root = Layout()
@@ -126,14 +128,18 @@ def main():
         slide.render()
         input()
 
-    panels_and_layouts()
-    input()
-    pretty_text()
-    input()
-    traceback_printing(use_rich=False)
-    input()
-    traceback_printing(use_rich=True)
-    input()
+    not_quite_slides = [
+        panels_and_layouts,
+        pretty_text,
+        traceback_printing_plain,
+        traceback_printing_rich,
+        putting_it_all_together,
+        final_demo,
+    ]
+    for not_slide in not_quite_slides:
+        not_slide()
+        input()
+
     conclusion().render()
     input()
 
@@ -143,9 +149,11 @@ def title() -> Slide:
         f"""
         # If I Were a Rich Man
 
-        [A Tour of the Rich, the library for rich text and beautiful formatting in the terminal]
+        A Tour of the Rich, the library for rich text and beautiful formatting in the terminal
 
-        [[Everything you see here is rendered with Rich]]
+        [Everything you see here is rendered with Rich]
+
+        [[Hit Enter to advance]]
 
         """
     )
@@ -289,6 +297,50 @@ def traceback_printing(use_rich: bool = False):
             console.print_exception(show_locals=True)
         else:
             logging.exception(e)
+
+
+def traceback_printing_plain():
+    return traceback_printing(use_rich=False)
+
+
+def traceback_printing_rich():
+    return traceback_printing(use_rich=True)
+
+
+def putting_it_all_together():
+    console.clear()
+    top_content = pad_markdown(
+        f"""
+        ## Putting it all together
+        """
+    )
+    mid_content = """
+    Let's make a status message that looks great:
+    * Green for good, red for bad
+    * Bold the important stuff
+    * Use some panels
+    * And emojis, why not
+        """
+    lower_content = """
+
+        """
+    console.print(top_content)
+    console.print(mid_content)
+    console.print(lower_content)
+
+
+def final_demo():
+    console.clear()
+    deadline = datetime.now() + timedelta(seconds=1)
+    status = Status("Testing", console=console)
+    status.start()
+    while datetime.now() < deadline:
+        pass
+    status.stop()
+
+    success_message = Text("We did it!", style="white")
+    success = Panel(success_message, title="Status", style="green")
+    console.print(success)
 
 
 def conclusion() -> Slide:
