@@ -1,5 +1,7 @@
+import json
 import logging
 import shutil
+import time
 from contextlib import redirect_stdout
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -7,8 +9,10 @@ from io import StringIO
 from textwrap import dedent
 
 import rich
-from rich.console import Console, RenderableType
+from rich.align import Align
+from rich.console import Console, Group, RenderableType
 from rich.layout import Layout
+from rich.live import Live
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
@@ -92,7 +96,12 @@ class OneCaseSlide(Slide):
 
 
 class SplitSlide(Slide):
-    def __init__(self, top, left_side, right_side):
+    def __init__(
+        self,
+        top,
+        left_side,
+        right_side,
+    ):
         super().__init__()
         self.top = top
         self.left_side = left_side
@@ -122,6 +131,7 @@ def main():
     slides = [
         title(),
         dict_comp(),
+        json_comp(),
         object_comp(),
     ]
     for slide in slides:
@@ -129,10 +139,10 @@ def main():
         input()
 
     not_quite_slides = [
-        panels_and_layouts,
-        pretty_text,
         traceback_printing_plain,
         traceback_printing_rich,
+        pretty_text,
+        panels_and_layouts,
         putting_it_all_together,
         final_demo,
     ]
@@ -184,8 +194,13 @@ def dict_comp() -> SplitSlide:
     
         """
     )
-    l = get_code_output(print, goose_dict)
-    r = get_code_output(rich.print, goose_dict)
+    l = get_code_output(print, goose_dict).code
+    r = Syntax(
+        get_code_output(rich.print, goose_dict).code,
+        "python",
+        word_wrap=True,
+        theme="ansi_dark",
+    )
     return SplitSlide(top_content, l, r)
 
 
@@ -203,6 +218,32 @@ def object_comp() -> SplitSlide:
     )
     l = get_code_output(print, goose)
     r = get_code_output(rich.print, goose)
+    return SplitSlide(top_content, l, r)
+
+
+def json_comp() -> SplitSlide:
+    goose_dict = {
+        "genus": "branta",
+        "species": "b. canadensis",
+        "flight": True,
+        "average wingspan (inches)": 60,
+        "habitats": ["lakes", "ponds", "bays", "marshes", "fields"],
+        "weight": None,
+    }
+    goose_json = json.dumps(goose_dict)
+
+    top_content = pad_markdown(
+        """\
+        ## Printing a dictionary:
+        
+        print(goose_json)
+    
+        """
+    )
+    l = Syntax(get_code_output(print, goose_json).code, "json", word_wrap=True)
+    r = Syntax(
+        get_code_output(rich.print_json, goose_json).code, "json", word_wrap=True
+    )
     return SplitSlide(top_content, l, r)
 
 
@@ -250,6 +291,12 @@ def panels_and_layouts():
     top_content = pad_markdown(
         f"""
         ## Layouts and Panels
+
+        Rich has support for flexible layouts and pre-built Panels to make your renderings prettier.
+
+
+
+        .
         """
     )
     console.print(top_content)
@@ -315,32 +362,87 @@ def putting_it_all_together():
         """
     )
     mid_content = """
-    Let's make a status message that looks great:
+    Let's make a status message with Rich:
     * Green for good, red for bad
     * Bold the important stuff
     * Use some panels
     * And emojis, why not
         """
     lower_content = """
+    success_message = Align("[bold white]We did it! :sunglasses:", align="center")
+    s_main_content = Align("Yep, this job sure did complete alright.", align="center")
+    s_main_panel = Layout(ratio=2)
+    s_main_panel.split_column(success_message, s_main_content)
+    s_side_panel_content = "\\
+    Here's all the things that went great:\\
+    :heavy_check_mark: That one thing\\
+    :heavy_check_mark: The other thing\\
+    :heavy_check_mark: Oh you know\\
+    "
+    s_side_panel = Panel(Align(s_side_panel_content, align="left"), style="black on green")
+    success = Layout()
+    success.split_row(s_main_panel, s_side_panel)
 
         """
     console.print(top_content)
     console.print(mid_content)
-    console.print(lower_content)
+    console.print(lower_content, markup=False)
 
 
 def final_demo():
-    console.clear()
-    deadline = datetime.now() + timedelta(seconds=1)
-    status = Status("Testing", console=console)
+    status = Status(
+        "Very important job in progress",
+        console=console,
+        spinner="aesthetic",
+    )
     status.start()
-    while datetime.now() < deadline:
-        pass
+    console.print(":arrow_down_small: Yep, this thing is from Rich too")
+    time.sleep(3)
     status.stop()
+    console.clear()
 
-    success_message = Text("We did it!", style="white")
-    success = Panel(success_message, title="Status", style="green")
-    console.print(success)
+    screen = Layout()
+    success_message = Align("[bold white]We did it! :sunglasses:", align="center")
+    s_main_content = Align(
+        """Yep, this job sure did complete alright.""", align="center"
+    )
+    s_main_panel = Layout(ratio=2)
+    s_main_panel.split_column(success_message, s_main_content)
+    s_side_panel_content = """
+    Here's all the things that went great:
+    :heavy_check_mark: That one thing
+    :heavy_check_mark: The other thing
+    :heavy_check_mark: Oh you know
+    """
+    s_side_panel = Panel(
+        Align(s_side_panel_content, align="left"), style="black on green"
+    )
+    success = Layout()
+    success.split_row(s_main_panel, s_side_panel)
+
+    failure_message = Align("[bold white]This job failed!", align="center")
+    f_main_content = Layout(
+        """[bold italic white]Status Report:[/bold italic white]
+        :white_check_mark: [white]That one thing[/white]
+        :x: [bold yellow]The other thing[/bold yellow]
+        :white_check_mark: [white]Oh you know[/white]
+                            
+                            """,
+        ratio=6,
+    )
+    f_main_panel = Layout(ratio=2)
+    f_main_panel.split_column(failure_message, f_main_content)
+    f_side_panel = Panel(
+        Align(":police_car_light: WEE WOO WEE WOO :police_car_light:", align="center"),
+        style="white on red",
+    )
+    failure = Layout()
+    failure.split_row(f_main_panel, f_side_panel)
+
+    success_panel = Panel(success, title="Status", style="green")
+    failure_panel = Panel(failure, title="Status", style="red")
+    screen.split_column(success_panel, failure_panel)
+    console.print(screen)
 
 
 def conclusion() -> Slide:
