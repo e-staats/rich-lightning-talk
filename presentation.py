@@ -4,15 +4,13 @@ import shutil
 import time
 from contextlib import redirect_stdout
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from io import StringIO
 from textwrap import dedent
 
 import rich
 from rich.align import Align
-from rich.console import Console, Group, RenderableType
+from rich.console import Console, RenderableType
 from rich.layout import Layout
-from rich.live import Live
 from rich.markdown import Markdown
 from rich.padding import Padding
 from rich.panel import Panel
@@ -82,11 +80,10 @@ class CustomSlide(Slide):
 
 
 class OneCaseSlide(Slide):
-    def __init__(self, top, bottom, title):
+    def __init__(self, top, bottom):
         super().__init__()
         self.top = top
         self.bottom = bottom
-        self.title = title
 
     def prepare(self):
         self.root = Layout(name="root")
@@ -139,6 +136,7 @@ def main():
         input()
 
     not_quite_slides = [
+        repl,
         traceback_printing_plain,
         traceback_printing_rich,
         pretty_text,
@@ -191,16 +189,11 @@ def dict_comp() -> SplitSlide:
         ## Printing a dictionary:
         
         print(goose_dict)
-    
+
         """
     )
     l = get_code_output(print, goose_dict).code
-    r = Syntax(
-        get_code_output(rich.print, goose_dict).code,
-        "python",
-        word_wrap=True,
-        theme="ansi_dark",
-    )
+    r = get_code_output(rich.print, goose_dict)
     return SplitSlide(top_content, l, r)
 
 
@@ -234,8 +227,9 @@ def json_comp() -> SplitSlide:
 
     top_content = pad_markdown(
         """\
-        ## Printing a dictionary:
+        ## And if you use JSON:
         
+        goose_json = json.dumps(goose_dict)
         print(goose_json)
     
         """
@@ -245,6 +239,30 @@ def json_comp() -> SplitSlide:
         get_code_output(rich.print_json, goose_json).code, "json", word_wrap=True
     )
     return SplitSlide(top_content, l, r)
+
+
+def repl():
+    console.clear()
+    top = pad_markdown(
+        """
+        ## Get this by default in your REPL
+        """
+    )
+    bottom = """
+            >>> from rich import pretty
+            >>> pretty.install()
+            >>> [True, "234234", 23432]
+        """
+    footer = pad_markdown(
+        """
+        Bonus fact! You can add these commands to a text file, then add the path
+        to that file as your PYTHONSTARTUP environment variable, and you'll get
+        Rich formatting in all your Python sessions where Rich is available!
+        """
+    )
+    console.print(top)
+    console.print(bottom)
+    console.print(footer)
 
 
 def pretty_text():
@@ -302,16 +320,18 @@ def panels_and_layouts():
     console.print(top_content)
     code = """
     root = Layout(name="root")
-    top = Layout(top)
-    left = Panel(left_side, title="Default")
-    right = Panel(right_side, title="Rich")
+
+    top = Layout()
 
     lower = Layout(ratio=3)
+    left = Panel(left_side, title="Default")
+    right = Panel(right_side, title="Rich")
     lower.split_row(Layout(left), Layout(right))
+
     root.split_column(top, lower)
     
     """
-    console.print(Syntax(code, "python"))
+    console.print(Syntax(code, "python", line_numbers=True))
 
     demo_slide = SplitSlide("", "", "")
     input()
@@ -367,12 +387,15 @@ def putting_it_all_together():
     * Bold the important stuff
     * Use some panels
     * And emojis, why not
+
+    Here's the success panel code:
         """
     lower_content = """
     success_message = Align("[bold white]We did it! :sunglasses:", align="center")
     s_main_content = Align("Yep, this job sure did complete alright.", align="center")
     s_main_panel = Layout(ratio=2)
     s_main_panel.split_column(success_message, s_main_content)
+
     s_side_panel_content = "\\
     Here's all the things that went great:\\
     :heavy_check_mark: That one thing\\
@@ -380,13 +403,13 @@ def putting_it_all_together():
     :heavy_check_mark: Oh you know\\
     "
     s_side_panel = Panel(Align(s_side_panel_content, align="left"), style="black on green")
+
     success = Layout()
     success.split_row(s_main_panel, s_side_panel)
-
         """
     console.print(top_content)
     console.print(mid_content)
-    console.print(lower_content, markup=False)
+    console.print(Syntax(lower_content, "python", line_numbers=True))
 
 
 def final_demo():
@@ -397,7 +420,7 @@ def final_demo():
     )
     status.start()
     console.print(":arrow_down_small: Yep, this thing is from Rich too")
-    time.sleep(3)
+    time.sleep(10)
     status.stop()
     console.clear()
 
