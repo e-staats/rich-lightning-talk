@@ -6,6 +6,7 @@ from contextlib import redirect_stdout
 from dataclasses import dataclass
 from io import StringIO
 from textwrap import dedent
+from typing import Union
 
 import rich
 from rich.align import Align
@@ -30,23 +31,36 @@ def pad_markdown(markup: str) -> RenderableType:
 
 
 @dataclass
-class Bird:
-    name: str
-    genus: str
-    species: str
-    flight: bool
-    wingspan: int
-    habitats: list[str]
+class Person:
+    is_rich: bool
+    if_I_were_a_rich_man: list[str]
+    all_day_long: str
+    house_Id_build_properties: list[Union[str, dict]]
 
 
-def get_goose():
-    return Bird(
-        name="Canada Goose",
-        genus="Branta",
-        species="B. canadensis",
-        flight=True,
-        wingspan=60,
-        habitats=["lakes", "ponds", "bays", "marshes", "fields"],
+def get_person():
+    return Person(
+        is_rich=False,
+        if_I_were_a_rich_man=[
+            "Ya",
+            "ba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dum",
+        ],
+        all_day_long="I'd biddy biddy bum",
+        house_Id_build_properties=[
+            "big",
+            "tall",
+            {"rooms": 12},
+            "Right in the middle of the town",
+            "A fine tin roof",
+            "real wooden floors",
+        ],
     )
 
 
@@ -176,67 +190,98 @@ def title() -> Slide:
 
 
 def dict_comp() -> SplitSlide:
-    goose_dict = {
-        "genus": "branta",
-        "species": "b. canadensis",
-        "flight": True,
-        "average wingspan (inches)": 60,
-        "habitats": ["lakes", "ponds", "bays", "marshes", "fields"],
+    topol_dict = {
+        "is_rich": False,
+        "if_I_were_a_rich_man": [
+            "Ya",
+            "ba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dum",
+        ],
+        "all_day_long": "I'd biddy biddy bum",
+        "house_Id_build_properties": [
+            "big",
+            "tall",
+            {"rooms": 12},
+            "Right in the middle of the town",
+            "A fine tin roof",
+            "real wooden floors",
+        ],
     }
 
     top_content = pad_markdown(
         """\
         ## Printing a dictionary:
         
-        print(goose_dict)
+        print(topol_dict)
 
         """
     )
-    l = get_code_output(print, goose_dict).code
-    r = get_code_output(rich.print, goose_dict)
+    l = get_code_output(print, topol_dict).code
+    r = get_code_output(rich.print, topol_dict)
     return SplitSlide(top_content, l, r)
 
 
 def object_comp() -> SplitSlide:
-    goose = get_goose()
+    topol = get_person()
     top_content = pad_markdown(
         """\
         ## Printing an object:
 
-        goose = Bird(...)
+        topol = Person(...)
 
-        print(goose)
+        print(topol)
     
         """
     )
-    l = get_code_output(print, goose)
-    r = get_code_output(rich.print, goose)
+    l = get_code_output(print, topol)
+    r = get_code_output(rich.print, topol)
     return SplitSlide(top_content, l, r)
 
 
 def json_comp() -> SplitSlide:
-    goose_dict = {
-        "genus": "branta",
-        "species": "b. canadensis",
-        "flight": True,
-        "average wingspan (inches)": 60,
-        "habitats": ["lakes", "ponds", "bays", "marshes", "fields"],
-        "weight": None,
+    topol_dict = {
+        "is_rich": False,
+        "if_I_were_a_rich_man": [
+            "Ya",
+            "ba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dibba",
+            "dum",
+        ],
+        "all_day_long": "I'd biddy biddy bum",
+        "house_Id_build_properties": [
+            "big",
+            "tall",
+            {"rooms": 12},
+            "Right in the middle of the town",
+            "A fine tin roof",
+            "real wooden floors",
+        ],
     }
-    goose_json = json.dumps(goose_dict)
+    topol_json = json.dumps(topol_dict)
 
     top_content = pad_markdown(
         """\
         ## And if you use JSON:
         
-        goose_json = json.dumps(goose_dict)
-        print(goose_json)
+        topol_json = json.dumps(topol_dict)
+        print(topol_json)
     
         """
     )
-    l = Syntax(get_code_output(print, goose_json).code, "json", word_wrap=True)
+    l = Syntax(get_code_output(print, topol_json).code, "json", word_wrap=True)
     r = Syntax(
-        get_code_output(rich.print_json, goose_json).code, "json", word_wrap=True
+        get_code_output(rich.print_json, topol_json).code, "json", word_wrap=True
     )
     return SplitSlide(top_content, l, r)
 
@@ -255,14 +300,27 @@ def repl():
         """
     footer = pad_markdown(
         """
-        Bonus fact! You can add these commands to a text file, then add the path
-        to that file as your PYTHONSTARTUP environment variable, and you'll get
-        Rich formatting in all your Python sessions where Rich is available!
+        ## Live Rich all the time
+
+        Add these commands to a file
+
+        Set the PYTHONSTARTUP environment variable to the path to that file
+        
         """
     )
+    code = """
+        try:                                                                        
+            from rich import pretty
+            pretty.install()
+            print("Rich formatting enabled")
+        except:
+            print("Rich formatting not enabled")
+        """
     console.print(top)
     console.print(bottom)
     console.print(footer)
+    console.print()
+    console.print(Syntax(code, "python"))
 
 
 def pretty_text():
@@ -339,7 +397,7 @@ def panels_and_layouts():
 
 
 def traceback_printing(use_rich: bool = False):
-    goose = get_goose()
+    topol = get_person()
     console.clear()
     if use_rich:
         code = "console.print_exception(show_locals=True)"
@@ -358,7 +416,7 @@ def traceback_printing(use_rich: bool = False):
     )
     console.print(top_content)
     try:
-        print(goose.weight)
+        print(topol.money)
     except Exception as e:
         if use_rich:
             console.print_exception(show_locals=True)
