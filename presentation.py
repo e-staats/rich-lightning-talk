@@ -190,7 +190,7 @@ def title() -> Slide:
 
 
 def dict_comp() -> SplitSlide:
-    topol_dict = {
+    tevye_dict = {
         "is_rich": False,
         "if_I_were_a_rich_man": [
             "Ya",
@@ -218,34 +218,34 @@ def dict_comp() -> SplitSlide:
         """\
         ## Printing a dictionary:
         
-        print(topol_dict)
+        print(tevye_dict)
 
         """
     )
-    l = get_code_output(print, topol_dict).code
-    r = get_code_output(rich.print, topol_dict)
+    l = get_code_output(print, tevye_dict).code
+    r = get_code_output(rich.print, tevye_dict)
     return SplitSlide(top_content, l, r)
 
 
 def object_comp() -> SplitSlide:
-    topol = get_person()
+    tevye = get_person()
     top_content = pad_markdown(
         """\
         ## Printing an object:
 
-        topol = Person(...)
+        tevye = Person(...)
 
-        print(topol)
+        print(tevye)
     
         """
     )
-    l = get_code_output(print, topol)
-    r = get_code_output(rich.print, topol)
+    l = get_code_output(print, tevye)
+    r = get_code_output(rich.print, tevye)
     return SplitSlide(top_content, l, r)
 
 
 def json_comp() -> SplitSlide:
-    topol_dict = {
+    tevye_dict = {
         "is_rich": False,
         "if_I_were_a_rich_man": [
             "Ya",
@@ -268,20 +268,20 @@ def json_comp() -> SplitSlide:
             "real wooden floors",
         ],
     }
-    topol_json = json.dumps(topol_dict)
+    tevye_json = json.dumps(tevye_dict)
 
     top_content = pad_markdown(
         """\
         ## And if you use JSON:
         
-        topol_json = json.dumps(topol_dict)
-        print(topol_json)
+        tevye_json = json.dumps(tevye_dict)
+        print(tevye_json)
     
         """
     )
-    l = Syntax(get_code_output(print, topol_json).code, "json", word_wrap=True)
+    l = Syntax(get_code_output(print, tevye_json).code, "json", word_wrap=True)
     r = Syntax(
-        get_code_output(rich.print_json, topol_json).code, "json", word_wrap=True
+        get_code_output(rich.print_json, tevye_json).code, "json", word_wrap=True
     )
     return SplitSlide(top_content, l, r)
 
@@ -397,7 +397,7 @@ def panels_and_layouts():
 
 
 def traceback_printing(use_rich: bool = False):
-    topol = get_person()
+    tevye = get_person()
     console.clear()
     if use_rich:
         code = "console.print_exception(show_locals=True)"
@@ -416,7 +416,7 @@ def traceback_printing(use_rich: bool = False):
     )
     console.print(top_content)
     try:
-        print(topol.money)
+        print(tevye.money)
     except Exception as e:
         if use_rich:
             console.print_exception(show_locals=True)
